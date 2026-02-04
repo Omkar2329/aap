@@ -1,0 +1,14 @@
+---
+- name: Basic connectivity and setup test
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Ping the host
+      ansible.builtin.ping:
+
+    - name: Create a test file
+      ansible.builtin.file:
+        path: /tmp/aap_test_file.txt
+        state: touch
+        mode: '0644'
