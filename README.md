@@ -150,67 +150,67 @@ metadata:
     pod-security.kubernetes.io/enforce: baseline
     pod-security.kubernetes.io/audit: baseline
     pod-security.kubernetes.io/warn: baseline
-Deployment Manifest
+```
+
+### Deployment Manifest
+```
+    cat << EOF   > "nginx-deploment.yaml"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cron-demo-app
-  namespace: keda-cron-demo
+  name: nginx
+  namespace: nginx
 spec:
-  replicas: 0
   selector:
     matchLabels:
-      app.kubernetes.io/name: cron-demo-app
+      app: nginx                        # Label used by the selector and service
+  replicas: 2                           # Specifies the desired number of pods
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: cron-demo-app
+        app: nginx                      # Label used by the selector and service
     spec:
       containers:
-      - name: pause
-        image: registry.k8s.io/pause:3.10
-        resources:
-          requests:
-            cpu: 10m
-            memory: 16Mi
-          limits:
-            cpu: 50m
-            memory: 64Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 65534
-          capabilities:
-            drop:
-              - ALL
-          seccompProfile:
-            type: RuntimeDefault
+      - name: nginx
+        image: harbor.sunfire.lab/library/nginx:latest      # The NGINX container image
+        ports:
+        - containerPort: 80             # The port the container exposes
+EOF
+```
+```
+kubectl apply  -f "nginx-deploment.yaml"
 ```
 
 ### ScaledObject (Cron Trigger) Manifest
 ```
+cat << EOF   > "nginx-cron-scaledobject.yaml"
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: cron-demo-app
-  namespace: keda-cron-demo
+  name: nginx-cron-scaledobject
+  namespace: nginx
 spec:
   scaleTargetRef:
-    name: cron-demo-app
-  minReplicaCount: 0
-  maxReplicaCount: 5
-  pollingInterval: 10
-  cooldownPeriod: 60
+    name: nginx
+  minReplicaCount: 1                    # Minimum pods during "off" hours
+  maxReplicaCount: 5                    # Maximum pods KEDA can scale to
   triggers:
-    - type: cron
-      metadata:
-        timezone: Asia/Kolkata
-        start: "*/5 * * * *"
-        end: "2-59/5 * * * *"
-        desiredReplicas: "3"
+  - type: cron
+    metadata:
+    # TimeZone: UTC
+      # timezone: UTC                   # mm hh dd MM DDD
+      # start: 00 20 * * *              # Start at 09:00, Mon-Fri --> 1-5
+      # end:   20 20 * * *              # End at 17:00, Mon-Fri
+    # TimeZone: IST
+      timezone: Asia/Kolkata
+      start: 20 23 * * *                # Start at 09:00, Mon-Fri
+      end:   25 23 * * *                # End at 17:00, Mon-Fri
+      desiredReplicas: "3"
+EOF
 ```
-
+```
+kubectl apply  -f "${PROJ_PATH}/nginx-cron-scaledobject.yaml"
+```
 ### Script Catalogue
 ### 00-prereq-check.sh
 ```
