@@ -154,7 +154,7 @@ metadata:
 
 ### Deployment Manifest
 ```
-    cat << EOF   > "nginx-deploment.yaml"
+cat << EOF   > "nginx-deploment.yaml"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
