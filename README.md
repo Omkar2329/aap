@@ -225,8 +225,8 @@ kubectl get crd | grep keda
 #!/bin/bash
 
 kubectl apply -f manifests/00-namespace.yaml
-kubectl apply -f manifests/01-deployment.yaml
-kubectl apply -f manifests/02-scaledobject-cron.yaml
+kubectl apply -f manifests/nginx-deploment.yaml
+kubectl apply -f manifests/nginx-cron-scaledobject.yaml
 ```
 ### 02-watch-scale.sh
 ```
@@ -240,18 +240,25 @@ kubectl get deployment cron-demo-app -n keda-cron-demo -w
 #!/bin/bash
 
 kubectl get namespace keda-cron-demo --show-labels
-kubectl get deployment cron-demo-app -n keda-cron-demo
-kubectl get scaledobject cron-demo-app -n keda-cron-demo
+kubectl get deployment nginx -n keda-cron-demo
+kubectl get scaledobject nginx-cron-scaledobject -n keda-cron-demo
 kubectl get hpa -n keda-cron-demo
-kubectl describe scaledobject cron-demo-app -n keda-cron-demo
 ```
-
+#### Example Output:
+```
+NAME                      SCALETARGETKIND      SCALETARGETNAME   MIN   MAX   READY   ACTIVE   FALLBACK   PAUSED   TRIGGERS   AUTHENTICATIONS   AGE
+nginx-cron-scaledobject   apps/v1.Deployment   nginx             1     5     True    True     False      False    cron                         168m
+```
+```
+NAME                               REFERENCE          TARGETS     MINPODS   MAXPODS   REPLICAS   AGE
+keda-hpa-nginx-cron-scaledobject   Deployment/nginx   1/1 (avg)   1         5         3          168m
+```
 ### 04-cleanup.sh
 ```
 #!/bin/bash
 
-kubectl delete -f manifests/02-scaledobject-cron.yaml --ignore-not-found=true
-kubectl delete -f manifests/01-deployment.yaml --ignore-not-found=true
+kubectl delete -f manifests/nginx-cron-scaledobject.yaml --ignore-not-found=true
+kubectl delete -f manifests/nginx-deploment.yaml --ignore-not-found=true
 kubectl delete -f manifests/00-namespace.yaml --ignore-not-found=true
 ```
 
@@ -270,30 +277,30 @@ kubectl delete -f manifests/00-namespace.yaml --ignore-not-found=true
 ## Expected Scaling Behaviour
 ### 1. Initial State
 ```
-kubectl get deployment cron-demo-app -n keda-cron-demo
+kubectl get deployment -n keda-cron-demo
 ```
 #### Expected:
 ```
 NAME             READY   UP-TO-DATE   AVAILABLE   AGE
-cron-demo-app    0/0     0            0           15s
+nginx            0/0     0            0           15s
 ```
 ### 2. During Active Cron Window
 ```
-kubectl get deployment cron-demo-app -n keda-cron-demo
+kubectl get deployment -n keda-cron-demo
 ```
 #### Expected:
 ```
 NAME             READY   UP-TO-DATE   AVAILABLE   AGE
-cron-demo-app    3/3     3            3           3m
+nginx            3/3     3            3           3m
 ```
 ### 3. After Cron Window Ends
 ```
-kubectl get deployment cron-demo-app -n keda-cron-demo
+kubectl get deployment  -n keda-cron-demo
 ```
 #### Expected:
 ```
 NAME             READY   UP-TO-DATE   AVAILABLE   AGE
-cron-demo-app    0/0     0            0           10m
+nginx            0/0     0            0           10m
 ```
 ## Troubleshooting
 |Issue|	Possible Cause|	Resolution|
