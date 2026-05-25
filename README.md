@@ -268,7 +268,7 @@ kubectl delete -f manifests/00-namespace.yaml --ignore-not-found=true
 |7|	Cleanup environment|	./scripts/04-cleanup.sh|	Namespace and resources deleted|
 
 ## Expected Scaling Behaviour
-### Initial State
+### 1. Initial State
 ```
 kubectl get deployment cron-demo-app -n keda-cron-demo
 ```
@@ -277,7 +277,7 @@ kubectl get deployment cron-demo-app -n keda-cron-demo
 NAME             READY   UP-TO-DATE   AVAILABLE   AGE
 cron-demo-app    0/0     0            0           15s
 ```
-### During Active Cron Window
+### 2. During Active Cron Window
 ```
 kubectl get deployment cron-demo-app -n keda-cron-demo
 ```
@@ -286,7 +286,7 @@ kubectl get deployment cron-demo-app -n keda-cron-demo
 NAME             READY   UP-TO-DATE   AVAILABLE   AGE
 cron-demo-app    3/3     3            3           3m
 ```
-### After Cron Window Ends
+### 3. After Cron Window Ends
 ```
 kubectl get deployment cron-demo-app -n keda-cron-demo
 ```
