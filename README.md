@@ -1,6 +1,6 @@
 ## *KEDA with Cron Scaler on VKS*
 
-###Introduction
+### Introduction
 
 KEDA Cron scaler enables time-based autoscaling for Kubernetes workloads running on VKS. Unlike traditional CPU or memory autoscaling, the Cron scaler uses scheduled time windows to scale workloads predictably during business hours, testing windows, maintenance periods, or SLA-driven operational schedules.
 
@@ -8,52 +8,53 @@ This approach is particularly valuable in enterprise on-premises environments wh
 
 This validation demonstrates:
 
-KEDA installation and CRD validation
-Cron trigger activation and deactivation
-Automatic HPA creation by KEDA
-Replica scaling for a sample workload
-Scale-to-zero capability on VKS
-Why Cron Scaler on VKS?
+- KEDA installation and CRD validation
+- Cron trigger activation and deactivation
+- Automatic HPA creation by KEDA
+- Replica scaling for a sample workload
+- Scale-to-zero capability on VKS
+  
+### Why Cron Scaler on VKS?
 
 Enterprise workloads often require predictable scaling patterns rather than reactive autoscaling based only on CPU or memory. Development environments, demo platforms, batch-processing services, and office-hour applications do not require continuous runtime capacity.
 
 KEDA Cron scaler solves this by:
 
-Scaling workloads only during active time windows
-Eliminating idle pod resource consumption
-Supporting declarative scheduling via Kubernetes manifests
-Providing GitOps-friendly automation
-Enabling scale-to-zero outside operational windows
+- Scaling workloads only during active time windows
+- Eliminating idle pod resource consumption
+- Supporting declarative scheduling via Kubernetes manifests
+- Providing GitOps-friendly automation
+- Enabling scale-to-zero outside operational windows
 
 For VKS environments running on finite infrastructure, this directly improves cluster utilization and prevents unnecessary resource contention between workloads.
 
-What is KEDA Cron Scaler?
+### What is KEDA Cron Scaler?
 
 The KEDA Cron scaler is an event-driven scaler that adjusts Kubernetes workload replicas according to cron-based schedules.
 
 KEDA continuously reconciles a ScaledObject resource and creates a native Kubernetes HPA behind the scenes. During the configured schedule window:
 
-Desired replicas are applied
-HPA reconciles deployment scaling
-Workloads scale automatically
+- Desired replicas are applied
+- HPA reconciles deployment scaling
+- Workloads scale automatically
 
 When the schedule window ends:
 
-Cooldown logic activates
-Replicas scale back down
-Idle workloads can return to zero pods
+- Cooldown logic activates
+- Replicas scale back down
+- Idle workloads can return to zero pods
 
 This provides predictable and repeatable autoscaling behavior without relying on workload metrics.
 
-Benefits of Cron Scaler
-Predictable scaling windows
-Zero idle resource consumption outside active schedules
-Declarative Kubernetes-native configuration
-Simple GitOps integration
-Lightweight operational overhead
-Enterprise-ready automation model
-Works in connected and air-gapped environments
-How Scaling Works Internally
+### Benefits of Cron Scaler
+- Predictable scaling windows
+- Zero idle resource consumption outside active schedules
+- Declarative Kubernetes-native configuration
+- Simple GitOps integration
+- Lightweight operational overhead
+- Enterprise-ready automation model
+- Works in connected and air-gapped environments
+- How Scaling Works Internally
 
 The following flow explains how KEDA Cron scaling operates internally inside the VKS workload cluster:
 
@@ -72,7 +73,8 @@ Deployment scales up
 Window ends + cooldown
       ↓
 Deployment scales down to 0
-VKS Platform with KEDA Cron Scaler Architecture
+
+### VKS Platform with KEDA Cron Scaler Architecture
 
 The diagram below represents how KEDA Cron scaler integrates into the VKS platform architecture.
 
@@ -116,6 +118,7 @@ Deployments scale dynamically during active schedules
 |  +---------------------------------------------------+    |
 |                                                           |
 +-----------------------------------------------------------+
+
 Setup
 Pre-Requisites
 Component	Version
