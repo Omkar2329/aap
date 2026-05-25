@@ -1,5 +1,6 @@
-KEDA with Cron Scaler on VKS
-Introduction
+## *KEDA with Cron Scaler on VKS*
+
+###Introduction
 
 KEDA Cron scaler enables time-based autoscaling for Kubernetes workloads running on VKS. Unlike traditional CPU or memory autoscaling, the Cron scaler uses scheduled time windows to scale workloads predictably during business hours, testing windows, maintenance periods, or SLA-driven operational schedules.
 
