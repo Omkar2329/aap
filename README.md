@@ -57,7 +57,7 @@ This provides predictable and repeatable autoscaling behavior without relying on
 - How Scaling Works Internally
 
 The following flow explains how KEDA Cron scaling operates internally inside the VKS workload cluster:
-
+```
 KEDA Operator
       ↓
 ScaledObject (Cron trigger)
@@ -73,7 +73,7 @@ Deployment scales up
 Window ends + cooldown
       ↓
 Deployment scales down to 0
-
+```
 ### VKS Platform with KEDA Cron Scaler Architecture
 
 The diagram below represents how KEDA Cron scaler integrates into the VKS platform architecture.
@@ -83,6 +83,7 @@ KEDA runs inside workload clusters
 Cron schedules are evaluated by KEDA Operator
 HPA objects are automatically created
 Deployments scale dynamically during active schedules
+```
 +-----------------------------------------------------------+
 |                 VMware Cloud Foundation                   |
 |                                                           |
@@ -118,20 +119,24 @@ Deployments scale dynamically during active schedules
 |  +---------------------------------------------------+    |
 |                                                           |
 +-----------------------------------------------------------+
+```
+### Setup
+### Pre-Requisites
+| Component |	Version |
+|---|---|
+|VMware Cloud Foundation (VCF)|	9.0.2|
+|vSphere Kubernetes Service (VKS)|	3.6.x|
+|KEDA	|2.19|
+|Kubernetes	|v1.30+|
+|Helm	|3.14.0|
+|Harbor (Optional for Airgap)|	2.14.3|
+|Istio|	1.28.5|
+|Cert Manager|	1.19.4|
 
-Setup
-Pre-Requisites
-Component	Version
-VMware Cloud Foundation (VCF)	9.0.2
-vSphere Kubernetes Service (VKS)	3.6.x
-KEDA	2.19
-Kubernetes	v1.30+
-Helm	3.14.0
-Harbor (Optional for Airgap)	2.14.3
-Istio	1.28.5
-Cert Manager	1.19.4
-Deployment Manifests
-Namespace Manifest
+### Deployment Manifests
+
+### Namespace Manifest
+```
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -181,7 +186,10 @@ spec:
               - ALL
           seccompProfile:
             type: RuntimeDefault
-ScaledObject (Cron Trigger) Manifest
+```
+
+### ScaledObject (Cron Trigger) Manifest
+```
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -201,23 +209,34 @@ spec:
         start: "*/5 * * * *"
         end: "2-59/5 * * * *"
         desiredReplicas: "3"
-Script Catalogue
-00-prereq-check.sh
+```
+
+### Script Catalogue
+### 00-prereq-check.sh
+```
 #!/bin/bash
 
 kubectl get pods -n keda
 kubectl get crd | grep keda
-01-deploy.sh
+```
+
+### 01-deploy.sh
+```
 #!/bin/bash
 
 kubectl apply -f manifests/00-namespace.yaml
 kubectl apply -f manifests/01-deployment.yaml
 kubectl apply -f manifests/02-scaledobject-cron.yaml
-02-watch-scale.sh
+```
+### 02-watch-scale.sh
+```
 #!/bin/bash
 
 kubectl get deployment cron-demo-app -n keda-cron-demo -w
-03-validate.sh
+```
+
+### 03-validate.sh
+```
 #!/bin/bash
 
 kubectl get namespace keda-cron-demo --show-labels
@@ -225,61 +244,86 @@ kubectl get deployment cron-demo-app -n keda-cron-demo
 kubectl get scaledobject cron-demo-app -n keda-cron-demo
 kubectl get hpa -n keda-cron-demo
 kubectl describe scaledobject cron-demo-app -n keda-cron-demo
-04-cleanup.sh
+```
+
+### 04-cleanup.sh
+```
 #!/bin/bash
 
 kubectl delete -f manifests/02-scaledobject-cron.yaml --ignore-not-found=true
 kubectl delete -f manifests/01-deployment.yaml --ignore-not-found=true
 kubectl delete -f manifests/00-namespace.yaml --ignore-not-found=true
-Validation Flow
-Step	Activity	Command	Success Criteria
-1	Check KEDA pods & CRDs	./scripts/00-prereq-check.sh	KEDA pods running and CRDs visible
-2	Deploy demo resources	./scripts/01-deploy.sh	Namespace, deployment and ScaledObject created
-3	Validate namespace labels	kubectl get ns keda-cron-demo --show-labels	Labels visible
-4	Validate HPA creation	kubectl get hpa -n keda-cron-demo	HPA created by KEDA
-5	Watch scaling events	./scripts/02-watch-scale.sh	Replicas scale from 0 → 3 → 0
-6	Inspect ScaledObject	./scripts/03-validate.sh	Ready=True and Active=True during window
-7	Cleanup environment	./scripts/04-cleanup.sh	Namespace and resources deleted
-Expected Scaling Behaviour
-Initial State
+```
+
+### Validation Flow
+
+|Step|Activity	|Command|	Success Criteria|
+|---|---|---|---|
+|1|	Check KEDA pods & CRDs|	./scripts/00-prereq-check.sh|	KEDA pods running and CRDs visible|
+|2|	Deploy demo resources|	./scripts/01-deploy.sh|	Namespace, deployment and ScaledObject created|
+|3|	Validate namespace labels|	kubectl get ns keda-cron-demo --show-labels|	Labels visible|
+|4|	Validate HPA creation|	kubectl get hpa -n keda-cron-demo	|HPA created by KEDA|
+|5|	Watch scaling events|	./scripts/02-watch-scale.sh	|Replicas scale from 0 → 3 → 0|
+|6|	Inspect ScaledObject|	./scripts/03-validate.sh|	Ready=True and Active=True during window|
+|7|	Cleanup environment|	./scripts/04-cleanup.sh|	Namespace and resources deleted|
+
+## Expected Scaling Behaviour
+### Initial State
+```
 kubectl get deployment cron-demo-app -n keda-cron-demo
-
-Expected:
-
+```
+#### Expected:
+```
 NAME             READY   UP-TO-DATE   AVAILABLE   AGE
 cron-demo-app    0/0     0            0           15s
-During Active Cron Window
+```
+### During Active Cron Window
+```
 kubectl get deployment cron-demo-app -n keda-cron-demo
-
-Expected:
-
+```
+#### Expected:
+```
 NAME             READY   UP-TO-DATE   AVAILABLE   AGE
 cron-demo-app    3/3     3            3           3m
-After Cron Window Ends
+```
+### After Cron Window Ends
+```
 kubectl get deployment cron-demo-app -n keda-cron-demo
-
-Expected:
-
+```
+#### Expected:
+```
 NAME             READY   UP-TO-DATE   AVAILABLE   AGE
 cron-demo-app    0/0     0            0           10m
-Troubleshooting
-Issue	Possible Cause	Resolution
-Namespace labels missing	Namespace manifest not applied properly	Reapply 00-namespace.yaml
-ScaledObject not Ready	Invalid target reference or CRD issue	Validate YAML and deployment name
-No scale-out event	Incorrect cron expression or timezone	Verify cron schedule
-HPA not created	KEDA operator issue	Inspect KEDA operator logs
-Scale-down delayed	Cooldown period active	Wait for cooldown expiry
-Pods stuck Pending	Resource constraints	Check worker node capacity
-Validation Commands
-Verify KEDA Components
+```
+## Troubleshooting
+|Issue|	Possible Cause|	Resolution|
+|---|---|---|
+|Namespace labels missing|	Namespace manifest not applied properly|	Reapply 00-namespace.yaml|
+|ScaledObject not Ready	|Invalid target reference or CRD issue|	Validate YAML and deployment name|
+|No scale-out event|	Incorrect cron expression or timezone	|Verify cron schedule|
+|HPA not created	|KEDA operator issue|	Inspect KEDA operator logs|
+|Scale-down delayed	|Cooldown period active|	Wait for cooldown expiry|
+|Pods stuck Pending|	Resource constraints	|Check worker node capacity|
+
+### Validation Commands
+#### Verify KEDA Components
+```
 kubectl get pods -n keda
-Verify ScaledObject
+```
+#### Verify ScaledObject
+```
 kubectl get scaledobject -n keda-cron-demo
-Verify HPA
+```
+#### Verify HPA
+```
 kubectl get hpa -n keda-cron-demo
-Describe ScaledObject
+```
+#### Describe ScaledObject
+```
 kubectl describe scaledobject cron-demo-app -n keda-cron-demo
-Complete Workflow
+```
+### Complete Workflow
+```
 Deploy Namespace
         ↓
 Deploy Application
@@ -299,14 +343,14 @@ Cron window ends
 Cooldown period starts
         ↓
 Deployment scales from 3 → 0
-Conclusion
+```
+## Conclusion
 
 KEDA Cron scaler provides predictable, lightweight, and enterprise-friendly autoscaling for VKS environments. By enabling schedule-based scaling and scale-to-zero capability, platform teams can significantly improve cluster efficiency while maintaining declarative Kubernetes-native operations.
 
-This validation confirms that:
-
-KEDA integrates cleanly with VKS
-Cron triggers function correctly
-HPAs are automatically managed
+#### This validation confirms that:
+- KEDA integrates cleanly with VKS
+- Cron triggers function correctly
+- HPAs are automatically managed
 Scale-to-zero works reliably
 Scheduled autoscaling reduces idle resource consumption on shared infrastructure clusters
